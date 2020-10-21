@@ -5,8 +5,10 @@ const scale = 10;
 const rows = canvas.height / scale;
 const columns = canvas.width  / scale;
 const game=false;
+let scoreNr = 0;
 
-
+let gamePlaying = true;
+let currentDirection;
 
 function gameOver(){
     
@@ -14,6 +16,13 @@ function gameOver(){
     ctx.textAlign="center"
     ctx.fillStyle="white"
     ctx.fillText("Game over",canvas.width/2,canvas.height/2);
+}
+
+function score(){
+    ctx.font = "20px Arial";
+    ctx.fillStyle= 'white';
+    ctx.textAlign='center'
+    ctx.fillText(`Score: ${scoreNr}`,50,30);
 }
 
 function Snake(){
@@ -54,7 +63,7 @@ function Snake(){
         this.y += this.ySpeed;
 
 
-    //Don't let colide
+         //Teleport trough margins
         if(this.x + scale> canvas.width){
             this.x=0;
         }if(this.x < 0){
@@ -66,46 +75,67 @@ function Snake(){
             this.y =canvas.height;
         }
          
-    //If snake touch it self
-
-        this.checkCollision = function (){
-            for(let i = 0; i < this.tail.length -1; i++){
-                if(this.x === this.tail[i].x && this.y === this.tail[i].y){
-                    return true
-                }
-            }
-        }
-        
-
+         
         
     }
 
-    this.changeDirection = function(direction){
-        switch(direction){
-            case 'Up':
-                this.xSpeed=0;
-                this.ySpeed= scale * -1;
-            break;
-            case 'Down':
-                this.xSpeed=0;
-                this.ySpeed= scale * 1;
-            break;
-            case 'Left':
-                this.xSpeed= scale * -1;
-                this.ySpeed= 0;
-            break;
-            case 'Right':
-                this.xSpeed= scale * 1;
-                this.ySpeed= 0;
-            break;
+    //If snake touch it self
 
+    this.checkCollision = function (){
+        for(let i = 0; i < this.tail.length -1; i++){
+            if(this.x === this.tail[i].x && this.y === this.tail[i].y){
+                gamePlaying = false;
+            }
+        }
+    }
+
+    //Change direction
+
+    this.changeDirection = function(direction){
+
+        // switch(direction){
+        //     case 'Up' :
+        //         this.xSpeed=0;
+        //         this.ySpeed= scale * -1;
+        //     break;
+        //     case 'Down':
+        //         this.xSpeed=0;
+        //         this.ySpeed= scale * 1;
+        //     break;
+        //     case 'Left':
+        //         this.xSpeed= scale * -1;
+        //         this.ySpeed= 0;
+        //     break;
+        //     case 'Right':
+        //         this.xSpeed= scale * 1;
+        //         this.ySpeed= 0;
+        //     break;
+
+        // }
+
+        //On keypress change snake direction and prevent it go the opposite way
+
+        if(direction === 'Up' && this.ySpeed !== scale * 1){
+            this.xSpeed=0;
+            this.ySpeed= scale * -1;
+        }else if(direction === 'Down' && this.ySpeed !== scale * -1){
+            this.xSpeed=0;
+                this.ySpeed= scale * 1;
+        }else if(direction === 'Left' && this.xSpeed !== scale * 1){
+            this.xSpeed= scale * -1;
+            this.ySpeed= 0;
+        }else if(direction === 'Right' && this.xSpeed !== scale * -1){
+            this.xSpeed= scale * 1;
+            this.ySpeed= 0;
         }
     }
 
     this.eat = function(fruit) {
         if(this.x === fruit.x && this.y === fruit.y) {
             this.total++;
+            scoreNr++;
             return true;
+            
         }
 
         return false
@@ -128,7 +158,9 @@ function Fruit() {
 
 window.addEventListener('keydown',function(e){
     const direction = e.key.replace('Arrow','');
+    
     snake.changeDirection(direction);
+    currentDirection = direction;
 });
 
 let snake = new Snake();
@@ -140,25 +172,27 @@ fruit.pickLocation();
 
 
     window.setInterval(()=>{
-
+      
+        if(gamePlaying){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
         
-       ctx.clearRect(0,0,canvas.width,canvas.height);
-        
-       if(game){
-        gameOver();
-       }
-        
-        fruit.draw();
-        snake.update();
-        snake.draw();
-    
-        if(snake.eat(fruit)) {
-            fruit.pickLocation();
+            if(!game){
+             fruit.draw();
+             snake.update();
+             snake.draw();
+             score();
+         
+             if(snake.eat(fruit)) {
+                 fruit.pickLocation();
+             }
+             if(snake.checkCollision()){
+                 console.log('atins')
+             }
+            }
+        }else{
+            gameOver();
         }
-        if(snake.checkCollision()){
-            gameOver=true;
-        }
-    
+        
     
     },100);
 
